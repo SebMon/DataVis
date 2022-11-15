@@ -2,7 +2,19 @@ library(shiny)
 library(ggplot2)
 library(circular)
 
+# Load data
+
 data <- read.csv('../data/sample.csv')
+
+# Data taken from here: https://datacommons.org/tools/timeline#place=geoId%2F24031&statsVar=Count_Person&chart=%7B%22count%22%3A%7B%22pc%22%3Afalse%7D%7D
+population$set("2016", 1039327)
+population$set("2017", 1047239)
+population$set("2018", 1048794)
+population$set("2019", 1051129)
+population$set("2020", 1051816)
+population$set("2021", 1054827)
+
+# Example to retrieve data: population$get("2020")
 
 # Preprocessing
 
