@@ -1,16 +1,81 @@
 library(shiny)
+library(ggplot2)
+library(circular)
 
 data <- read.csv('../data/sample.csv')
 
+# Preprocessing
+
+##### Calculate circular density for time-of-day plot
+data$Hour <- as.integer(format(as.POSIXct(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%H"))
+data$Minute <- as.integer(format(as.POSIXct(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%M"))
+data$HourDec <- data$Hour + (data$Minute / 60)
+data$TimeRad <- 2 * pi * (data$HourDec/24)
+
+basic_time_of_day_dens = density(data$TimeRad, from = 0, to = 2 * pi)
+
+rad_time_of_day_density = circular::density.circular(circular::circular(data$TimeRad,
+                                                            type="angle",
+                                                            units="radians",
+                                                            rotation="clock"),
+                                         kernel = "wrappednormal",
+                                         bw = basic_time_of_day_dens$bw) 
+
+time_of_day_density = data.frame(time = as.numeric(24*((2 * pi) + rad_density$x) / (2*pi)),
+                          likelyhood = rad_density$y/(24/(2*pi))) # Gotta make sure the division is legit
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-  titlePanel("My Shiny App"),
+  h1("Crimes in Montgomery county"),
+  
+  h2("At what time of the day do crimes happen?"),
+  
+  fluidRow(
+    column( 8,
+      plotOutput("TimeOfDayPlot"),
+    ),
+
+    column( 4,
+      plotOutput("TimeOfDayPlotCircular")
+    )
+  )
   
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  output$TimeOfDayPlot <- renderPlot(
+      ggplot(data, mapping=aes(x=Hour)) +
+        #coord_polar() +
+        geom_bar(aes(y = (..count..)/sum(..count..)), 
+                 position = position_nudge(x = 0.5), 
+                 fill="gray", 
+                 colour="black",
+                 width=1) +
+        scale_y_continuous(name="Density") +
+        scale_x_continuous(name="Hour",
+                           breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24)) +
+        geom_line(time_of_day_density, 
+                  mapping = aes(x=time, y=likelyhood), 
+                  color="red")
+  )
   
+  output$TimeOfDayPlotCircular <- renderPlot(
+    ggplot(data, mapping=aes(x=Hour)) +
+      coord_polar() +
+      geom_bar(aes(y = (..count..)/sum(..count..)), 
+               position = position_nudge(x = 0.5), 
+               fill="gray", 
+               colour="black",
+               width=1) +
+      scale_y_continuous(name="Density") +
+      scale_x_continuous(name="Hour",
+                         breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24)) +
+      geom_line(time_of_day_density, 
+                mapping = aes(x=time, y=likelyhood), 
+                color="red")
+  )
+    
 }
 
 # Run the application 
