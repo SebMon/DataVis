@@ -67,7 +67,46 @@ ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) +
 ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
   geom_bar(position="stack", stat="identity")
 
-'Below does not work, it was a desperate try to remove spaghetti'
-library("sjmisc")
-test <- sample_data2 %>% mutate(Place = ifelse(str_contains(Place, "Street"), "Street", Place))
-test$Place
+
+'Below is optimized code'
+
+relevant_cols <- select(data, Incident.ID, Start_Date_Time, Victims, Crime.Name1, Crime.Name2, Crime.Name3, Place, Police.District.Name)
+
+sample_with_changed_Place <- relevant_cols %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
+"Street",
+ifelse(grepl("Residence", Place, fixed = TRUE), 
+      "Residence",
+      ifelse(grepl("Retail", Place, fixed = TRUE),
+             "Retail (shops)", 
+             ifelse((Place == "Grocery/Supermarket")
+                    | (Place == "Gas Station"),
+                    "Gas station", 
+                    ifelse(grepl("Parking", Place, fixed = TRUE),
+                           "Parking lot/garage",
+                           ifelse(grepl("School", Place, fixed = TRUE),
+                                  "School/Uni/Col",
+                                  ifelse(grepl("Government", Place, fixed = TRUE),
+                                         "Government building",
+                                         ifelse(grepl("Bank", Place, fixed = TRUE),
+                                              "Bank",
+                                              ifelse(grepl("Commercial", Place, fixed = TRUE)
+                                                    | grepl("Restaurant", Place, fixed = TRUE)
+                                                    | grepl("Bar", Place, fixed = TRUE)
+                                                    | grepl("Hotel/Motel", Place, fixed = TRUE),
+                                                    "Commercial",
+                                                          ifelse(grepl("Store", Place, fixed = TRUE),
+                                                                "Store",
+                                                                "Other"
+)))))))))))
+
+unique(sample_with_changed_Place$Place)
+
+sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
+
+ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
+  geom_bar(position="stack", stat="identity")
+
+ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
+  geom_bar(position="fill", stat="identity")
+
+table(sample_with_changed_Place$Place)
