@@ -84,7 +84,7 @@ ifelse(grepl("Residence", Place, fixed = TRUE),
                     ifelse(grepl("Parking", Place, fixed = TRUE),
                            "Parking lot/garage",
                            ifelse(grepl("School", Place, fixed = TRUE),
-                                  "School/Uni/Col",
+                                  "School/University/College",
                                   ifelse(grepl("Government", Place, fixed = TRUE),
                                          "Government building",
                                          ifelse(grepl("Bank", Place, fixed = TRUE),
@@ -104,9 +104,10 @@ unique(sample_with_changed_Place$Place)
 sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 
 ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-  geom_bar(position="stack", stat="identity")
+  geom_bar(position="stack", stat="identity") + coord_flip()
 
 ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-  geom_bar(position="fill", stat="identity")
+  geom_bar(position="fill", stat="identity") + coord_flip()
 
 table(sample_with_changed_Place$Place)
+
