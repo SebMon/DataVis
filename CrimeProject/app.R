@@ -8,11 +8,10 @@ library(gganimate)
 
 data <- read.csv('data/sample.csv')
 data <- mutate(data, Crime.Name1 = if_else(Crime.Name1 == "", "Other", Crime.Name1))
+data$Start_Date_Time <- as.Date(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 
 create_crimetype_gif <- function() {
   # Making the date column actual date objects
-  data$Start_Date_Time <- as.Date(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
-  
   data$month <- floor_date(data$Start_Date_Time, unit="month")
   
   crimeByTypeOverTime <- aggregate(data$Incident.ID, by=list(crime= data$Crime.Name1, month = data$month), length)
