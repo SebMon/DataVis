@@ -29,7 +29,7 @@ data_place <- relevant_cols %>% mutate(Place = ifelse(grepl("Street", Place, fix
   ifelse(grepl("Store", Place, fixed = TRUE),
   "Store",
   "Other"
-  )))))))))))
+)))))))))))
 
 unique(data_place$Place)
 

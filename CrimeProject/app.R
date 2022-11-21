@@ -4,6 +4,7 @@ library(circular)
 library(fastmap)
 library(lubridate)
 library(gganimate)
+library(dplyr)
 
 # Load data
 data <- read.csv('./data/Crime.csv')
@@ -11,6 +12,39 @@ data <- mutate(data, Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name
 data$Start_Date_Time_Date_Objects <- as.Date(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 
 population = fastmap()
+
+# Data for Place diagrams
+data_place <- data
+data_place <- data_place %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
+"Street",
+ifelse(grepl("Residence", Place, fixed = TRUE), 
+       "Residence",
+       ifelse(grepl("Retail", Place, fixed = TRUE),
+              "Retail (shops)", 
+              ifelse((Place == "Grocery/Supermarket")
+                     | (Place == "Gas Station"),
+                     "Gas station", 
+                     ifelse(grepl("Parking", Place, fixed = TRUE),
+                            "Parking lot/garage",
+                            ifelse(grepl("School", Place, fixed = TRUE),
+                                   "School/University/College",
+                                   ifelse(grepl("Government", Place, fixed = TRUE),
+                                          "Government building",
+                                          ifelse(grepl("Bank", Place, fixed = TRUE),
+                                                 "Bank",
+                                                 ifelse(grepl("Commercial", Place, fixed = TRUE)
+                                                        | grepl("Restaurant", Place, fixed = TRUE)
+                                                        | grepl("Bar", Place, fixed = TRUE)
+                                                        | grepl("Hotel/Motel", Place, fixed = TRUE),
+                                                        "Commercial",
+                                                        ifelse(grepl("Store", Place, fixed = TRUE),
+                                                               "Store",
+                                                               "Other"
+)))))))))))
+
+data_place$Start_Date_Time <- as.Date(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
+data_place$year <- floor_date(data_place$Start_Date_Time, unit="year")
+
 
 # Data taken from here: https://datacommons.org/tools/timeline#place=geoId%2F24031&statsVar=Count_Person&chart=%7B%22count%22%3A%7B%22pc%22%3Afalse%7D%7D
 population$set("2016", 1039327)
@@ -29,6 +63,8 @@ data$Hour <- as.integer(format(as.POSIXct(data$Start_Date_Time, format="%m/%d/%Y
 data$Minute <- as.integer(format(as.POSIXct(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%M"))
 data$HourDec <- data$Hour + (data$Minute / 60)
 data$TimeRad <- 2 * pi * (data$HourDec/24)
+
+data <- subset(data, !is.na(data$TimeRad))
 
 basic_time_of_day_dens = density(data$TimeRad, from = 0, to = 2 * pi)
 
@@ -86,6 +122,18 @@ ui <- fluidPage(
   h2("What type of crime is most prevalent over time?"),
   fluidRow(
     img(src="crimebyTypeOverTime.gif")
+  ),
+  h2("What places have the highest amount of cimes?"),
+  fluidRow(
+    column( 6,
+      plotOutput("stackedBarChart")
+    ),
+    column( 6,
+      plotOutput("stackedBarChartNorm")
+    ),
+    column( 12,
+      plotOutput("linePlotPlaces")
+    )
   )
   
 )
@@ -123,8 +171,30 @@ server <- function(input, output) {
                 mapping = aes(x=time, y=likelyhood), 
                 color="red")
   )
+  
+  output$stackedBarChart <- renderPlot(
+    ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
+      geom_bar(position="stack", stat="identity") + coord_flip()
+  ) 
+  
+  output$stackedBarChartNorm <- renderPlot(
+    ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
+      geom_bar(position="fill", stat="identity") + coord_flip()
+  )
+  
+  output$linePlotPlaces <- renderPlot(
+    data_place %>%
+      group_by(Place, year) %>%
+      add_count() %>%
+      ungroup() %>%
+      ggplot(aes(x=year, y=n, color=Place)) + 
+      geom_line()
+  )
+  
+  
     
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
