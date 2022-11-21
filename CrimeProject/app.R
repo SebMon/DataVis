@@ -1,10 +1,13 @@
 library(shiny)
 library(ggplot2)
 library(circular)
+library(fastmap)
 
 # Load data
 
 data <- read.csv('../data/sample.csv')
+
+population = fastmap()
 
 # Data taken from here: https://datacommons.org/tools/timeline#place=geoId%2F24031&statsVar=Count_Person&chart=%7B%22count%22%3A%7B%22pc%22%3Afalse%7D%7D
 population$set("2016", 1039327)
@@ -33,8 +36,8 @@ rad_time_of_day_density = circular::density.circular(circular::circular(data$Tim
                                          kernel = "wrappednormal",
                                          bw = basic_time_of_day_dens$bw) 
 
-time_of_day_density = data.frame(time = as.numeric(24*((2 * pi) + rad_density$x) / (2*pi)),
-                          likelyhood = rad_density$y/(24/(2*pi))) # Gotta make sure the division is legit
+time_of_day_density = data.frame(time = as.numeric(24*((2 * pi) + rad_time_of_day_density$x) / (2*pi)),
+                          likelyhood = rad_time_of_day_density$y/(24/(2*pi))) # Gotta make sure the division is legit
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
