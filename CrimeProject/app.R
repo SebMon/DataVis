@@ -5,9 +5,12 @@ library(tidyr)
 library(lubridate)
 library(networkD3)
 library(gganimate)
+library(plotly)
 
 data <- read.csv('data/sample.csv')
 data <- mutate(data, Crime.Name1 = if_else(Crime.Name1 == "", "Other", Crime.Name1))
+data <- mutate(data, Crime.Name2 = if_else(Crime.Name2 == "", "NOT NIBRS CODE", Crime.Name2))
+data <- mutate(data, Crime.Name3 = if_else(Crime.Name3 == "", "ALL OTHER OFFENSES", Crime.Name3))
 data$Start_Date_Time <- as.Date(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 
 create_crimetype_gif <- function() {
