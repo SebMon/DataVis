@@ -4,7 +4,7 @@ library(lubridate)
 
 relevant_cols <- select(data, Incident.ID, Start_Date_Time, Victims, Crime.Name1, Crime.Name2, Crime.Name3, Place, Police.District.Name)
 
-sample_with_changed_Place <- relevant_cols %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
+data_place <- relevant_cols %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
   "Street",
   ifelse(grepl("Residence", Place, fixed = TRUE), 
   "Residence",
@@ -31,16 +31,16 @@ sample_with_changed_Place <- relevant_cols %>% mutate(Place = ifelse(grepl("Stre
   "Other"
   )))))))))))
 
-unique(sample_with_changed_Place$Place)
+unique(data_place$Place)
 
-sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
+data_place <- data_place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 
 'Making date object'
-sample_with_changed_Place$Start_Date_Time <- as.Date(sample_with_changed_Place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
-sample_with_changed_Place$year <- floor_date(sample_with_changed_Place$Start_Date_Time, unit="year")
+data_place$Start_Date_Time <- as.Date(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
+data_place$year <- floor_date(data_place$Start_Date_Time, unit="year")
 'End of making date object'
 
-sample_with_changed_Place %>%
+data_place %>%
   group_by(Place, year) %>%
   add_count() %>%
   ungroup() %>%

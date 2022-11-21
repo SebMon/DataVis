@@ -7,7 +7,7 @@ sample_data <- read.csv("data/sample.csv")
 
 relevant_cols <- select(data, Incident.ID, Start_Date_Time, Victims, Crime.Name1, Crime.Name2, Crime.Name3, Place, Police.District.Name)
 
-sample_with_changed_Place <- relevant_cols %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
+data_place <- relevant_cols %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
 "Street",
 ifelse(grepl("Residence", Place, fixed = TRUE), 
       "Residence",
@@ -34,15 +34,15 @@ ifelse(grepl("Residence", Place, fixed = TRUE),
                                                                 "Other"
 )))))))))))
 
-unique(sample_with_changed_Place$Place)
+unique(data_place$Place)
 
-sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
+data_place <- data_place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 
-ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
+ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
   geom_bar(position="stack", stat="identity") + coord_flip()
 
-ggplot(sample_with_changed_Place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
+ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
   geom_bar(position="fill", stat="identity") + coord_flip()
 
-table(sample_with_changed_Place$Place)
+table(data_place$Place)
 
