@@ -35,6 +35,19 @@ unique(sample_with_changed_Place$Place)
 
 sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 
+'Making date object'
+sample_with_changed_Place$Start_Date_Time <- as.Date(sample_with_changed_Place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
+sample_with_changed_Place$year <- floor_date(sample_with_changed_Place$Start_Date_Time, unit="year")
+'End of making date object'
+
+sample_with_changed_Place %>%
+  group_by(Place, year) %>%
+  add_count() %>%
+  ungroup() %>%
+  ggplot(aes(x=year, y=n, color=Place)) + 
+  geom_line()
+
+'Do not use the mutate below'
 sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Start_Date_Time = ifelse(
   grepl("2017", Start_Date_Time, fixed = TRUE),
   "2017",
@@ -51,15 +64,7 @@ sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Start_Date_Tim
           grepl("2021", Start_Date_Time, fixed = TRUE),
           "2021",
           "Other"
-))))))
-
+        ))))))
 sample_with_changed_Place <- sample_with_changed_Place %>% filter(!Start_Date_Time=="Other")
 
 unique(sample_with_changed_Place$Start_Date_Time)
-
-'Making date object'
-sample_with_changed_Place$Start_Date_Time <- as.Date(sample_with_changed_Place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
-sample_with_changed_Place$year <- floor_date(sample_with_changed_Place$Start_Date_Time, unit="year")
-'End of making date object'
-
-ggplot(sample_with_changed_Place, aes(x=year, y=Victims, group=Place, color=Place)) + geom_line()
