@@ -46,25 +46,3 @@ sample_with_changed_Place %>%
   ungroup() %>%
   ggplot(aes(x=year, y=n, color=Place)) + 
   geom_line()
-
-'Do not use the mutate below'
-sample_with_changed_Place <- sample_with_changed_Place %>% mutate(Start_Date_Time = ifelse(
-  grepl("2017", Start_Date_Time, fixed = TRUE),
-  "2017",
-  ifelse(
-    grepl("2018", Start_Date_Time, fixed = TRUE),
-    "2018",
-    ifelse(
-      grepl("2019", Start_Date_Time, fixed = TRUE),
-      "2019",
-      ifelse(
-        grepl("2020", Start_Date_Time, fixed = TRUE),
-        "2020",
-        ifelse(
-          grepl("2021", Start_Date_Time, fixed = TRUE),
-          "2021",
-          "Other"
-        ))))))
-sample_with_changed_Place <- sample_with_changed_Place %>% filter(!Start_Date_Time=="Other")
-
-unique(sample_with_changed_Place$Start_Date_Time)
