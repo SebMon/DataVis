@@ -1,5 +1,6 @@
 library(dplyr)
 library(ggplot2)
+library(lubridate)
 
 relevant_cols <- select(data, Incident.ID, Start_Date_Time, Victims, Crime.Name1, Crime.Name2, Crime.Name3, Place, Police.District.Name)
 
@@ -56,4 +57,9 @@ sample_with_changed_Place <- sample_with_changed_Place %>% filter(!Start_Date_Ti
 
 unique(sample_with_changed_Place$Start_Date_Time)
 
-ggplot(sample_with_changed_Place, aes(x=Start_Date_Time, y=Victims, group=Place, color=Place)) + geom_line()
+'Making date object'
+sample_with_changed_Place$Start_Date_Time <- as.Date(sample_with_changed_Place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
+sample_with_changed_Place$year <- floor_date(sample_with_changed_Place$Start_Date_Time, unit="year")
+'End of making date object'
+
+ggplot(sample_with_changed_Place, aes(x=year, y=Victims, group=Place, color=Place)) + geom_line()
