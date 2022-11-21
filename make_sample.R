@@ -1,6 +1,6 @@
 library(dplyr)
 
-# Remember to open the project before running this script
+# Remember to open the project before running this
 
 data <- read.csv('./data/Crime.csv')
 
