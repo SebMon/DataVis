@@ -100,6 +100,10 @@ create_crimetype_gif <- function() {
   anim_save("./www/crimebyTypeOverTime.gif", animate(the_gif, height = 300, width = 800))
 }
 
+##### Create dataset for bin2d victim plot
+bin2d_vict_data <- data_place %>% mutate(Victims = as.character(ifelse(Victims>=7, "7 or more", Victims)))
+sum_of_victims_in_places <- bin2d_vict_data %>% group_by(Place) %>% count() %>% spread(Place, n)
+
 # Uncomment when needed to update, and before deployment
 # create_crimetype_gif()
 
@@ -134,7 +138,13 @@ ui <- fluidPage(
     column( 12,
       plotOutput("linePlotPlaces")
     )
-  )
+  ),
+  h2("How are the number of victims per crime distributed across different places"),
+  fluidRow(
+    column(12,
+           plotOutput("VictimsPlot"))
+  ),
+  checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE)
   
 )
 
@@ -191,10 +201,24 @@ server <- function(input, output) {
       geom_line()
   )
   
-  
+  VictimsPlot <- 
+    reactive({
+      if (input$VictimPlotNormalize){
+        return(ggplot(bin2d_vict_data) +
+          geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=100*..count../as.integer(sum_of_victims_in_places[y]))) +
+          stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = round(100*..count../as.integer(sum_of_victims_in_places[y]), digits = 3))) +
+          scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.0001, 100), breaks=c(0.002, 0.06, 2, 64)))
+      } else {
+        return(ggplot(bin2d_vict_data) +
+          geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=..count..)) +
+          stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = ..count..)) +
+            scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Crimes"))
+      }
+    })
+           
+  output$VictimsPlot <- renderPlot(VictimsPlot())
     
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
