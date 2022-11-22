@@ -123,7 +123,7 @@ ui <- fluidPage(
   fluidRow(
     img(src="crimebyTypeOverTime.gif")
   ),
-  h2("What places have the highest amount of cimes?"),
+  h2("Which places have the highest amount of cimes?"),
   fluidRow(
     column( 6,
       plotOutput("stackedBarChart")
