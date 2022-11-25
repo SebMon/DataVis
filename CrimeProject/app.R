@@ -458,7 +458,9 @@ server <- function(input, output, session) {
       add_count() %>%
       ungroup() %>%
       filter(!(data_place$year == "2016-01-01" | data_place$year == "2022-01-01")) %>%
-      ggplot(aes(x=year, y=n, color=Place)) + 
+      ggplot(aes(x=year, y=n, color=Place)) +
+      ylab("Number of crimes") +
+      xlab("Year") +
       geom_line()
   )
   
