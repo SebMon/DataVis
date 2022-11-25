@@ -18,7 +18,7 @@ population = fastmap()
 #calendar_data <- read.csv('../data/sample.csv')
 #calendar_date <- as.Date(data$Start_Date_Time , "%m/%d/%Y")
 calendar_date <- data$Start_Date_Time_Date_Objects
-# calendar_date
+calendar_date
 calendar_minDate <- "2017-01-01"
 calendar_maxDate <- "2021-12-31"
 calendar_date <- subset(calendar_date, calendar_date >= calendar_minDate & calendar_date <= calendar_maxDate)
@@ -177,9 +177,11 @@ data_place$TimeRad <- 2 * pi * (data_place$HourDec/24)
 
 data_place <- subset(data_place, !is.na(data_place$TimeRad))
 
-basic_time_of_day_dens = density(data_place$TimeRad, from = 0, to = 2 * pi)
+data_place_TOD <- sample_n(data_place, 10000)
 
-rad_time_of_day_density = circular::density.circular(circular::circular(data_place$TimeRad,
+basic_time_of_day_dens = density(data_place_TOD$TimeRad, from = 0, to = 2 * pi)
+
+rad_time_of_day_density = circular::density.circular(circular::circular(data_place_TOD$TimeRad,
                                                             type="angle",
                                                             units="radians",
                                                             rotation="clock"),
@@ -222,6 +224,37 @@ sum_of_victims_in_places <- bin2d_vict_data %>% group_by(Place) %>% count() %>% 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   h1("Crimes in Montgomery county"),
+  
+  h2("Which places have the highest amount of crimes?"),
+  fluidRow(
+    column( 6,
+            plotOutput("stackedBarChart")
+    ),
+    column( 6,
+            plotOutput("stackedBarChartNorm")
+    ),
+    column( 12,
+            h3("And how has that changed over time?")
+    ),
+    column( 12,
+            plotOutput("linePlotPlaces")
+    )
+  ),
+  
+  h2("Crime rate over the years"),
+  fluidRow(
+    column(12,
+           plotOutput("CalendarPlot",
+                      width = "100%",
+                      height = 800)
+    ),
+  ),
+  
+  h2("What type of crime is most prevalent over time?"),
+  fluidRow(
+    img(src="crimebyTypeOverTime.gif")
+  ),
+  
   div(
     h2("At what time of the day do crimes happen?"),
     
@@ -255,22 +288,6 @@ ui <- fluidPage(
     ),
   ),
   
-  h2("What type of crime is most prevalent over time?"),
-  fluidRow(
-    img(src="crimebyTypeOverTime.gif")
-  ),
-  h2("Which places have the highest amount of cimes?"),
-  fluidRow(
-    column( 6,
-      plotOutput("stackedBarChart")
-    ),
-    column( 6,
-      plotOutput("stackedBarChartNorm")
-    ),
-    column( 12,
-      plotOutput("linePlotPlaces")
-    )
-  ),
   h2("How are the number of victims per crime distributed across different places"),
   fluidRow(
     column(12,
@@ -278,14 +295,6 @@ ui <- fluidPage(
   ),
   checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE),
   
-  h2("Crime rate over the years"),
-  fluidRow(
-    column(12,
-           plotOutput("CalendarPlot",
-                      width = "100%",
-                      height = 800)
-    ),
-  ),
 )
 
 # Define server logic required to draw a histogram
@@ -293,7 +302,7 @@ server <- function(input, output, session) {
   
   TODData <- reactive({
     return(
-      data_place %>%
+      data_place_TOD %>%
         filter(Place %in% input$TODPlaces) %>%
         filter(Crime.Name1 %in% input$TODCrimeTypes)
       )
@@ -366,7 +375,7 @@ server <- function(input, output, session) {
                width=1)
     if (input$TODShadow) {
       plot <- plot +
-        geom_bar(data_place, mapping = aes(y = (..count..)/sum(..count..)), 
+        geom_bar(data_place_TOD, mapping = aes(y = (..count..)/sum(..count..)), 
                  position = position_nudge(x = 0.5), 
                  fill="blue", 
                  alpha=0.1,
@@ -403,7 +412,7 @@ server <- function(input, output, session) {
                width=1)
     if (input$TODShadow) {
       plot <- plot +
-        geom_bar(data_place, mapping = aes(y = (..count..)/sum(..count..)), 
+        geom_bar(data_place_TOD, mapping = aes(y = (..count..)/sum(..count..)), 
                  position = position_nudge(x = 0.5), 
                  fill="blue", 
                  alpha=0.1,
@@ -459,7 +468,7 @@ server <- function(input, output, session) {
         return(ggplot(bin2d_vict_data) +
           geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=100*..count../as.integer(sum_of_victims_in_places[y]))) +
           stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = round(100*..count../as.integer(sum_of_victims_in_places[y]), digits = 3))) +
-          scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.0001, 100), breaks=c(0.002, 0.06, 2, 64)))
+          scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.001, 100)))
       } else {
         return(ggplot(bin2d_vict_data) +
           geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=..count..)) +
