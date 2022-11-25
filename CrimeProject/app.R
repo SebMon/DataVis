@@ -18,7 +18,6 @@ population = fastmap()
 #calendar_data <- read.csv('../data/sample.csv')
 #calendar_date <- as.Date(data$Start_Date_Time , "%m/%d/%Y")
 calendar_date <- data$Start_Date_Time_Date_Objects
-calendar_date
 calendar_minDate <- "2017-01-01"
 calendar_maxDate <- "2021-12-31"
 calendar_date <- subset(calendar_date, calendar_date >= calendar_minDate & calendar_date <= calendar_maxDate)
