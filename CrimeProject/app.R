@@ -14,6 +14,114 @@ data$Start_Date_Time_Date_Objects <- as.Date(data$Start_Date_Time, format="%m/%d
 
 population = fastmap()
 
+# Data for Calendar diagrams
+#calendar_data <- read.csv('../data/sample.csv')
+calendar_date <- as.Date(data$Start_Date_Time , "%m/%d/%Y")
+calendar_minDate <- "2017-01-01"
+calendar_maxDate <- "2021-12-31"
+calendar_date <- subset(calendar_date, calendar_date >= calendar_minDate & calendar_date <= calendar_maxDate)
+
+calendar_df <- data.frame(calendar_date = seq(as.Date(calendar_minDate), as.Date(calendar_maxDate), by="days"), value = NA)
+calendar_df$value <- table(calendar_date)
+
+calendar_df$year  <-  as.factor(format(calendar_df$calendar_date, "%Y"))
+calendar_df$month <- as.numeric(format(calendar_df$calendar_date, "%m"))
+calendar_df$doy   <- as.numeric(format(calendar_df$calendar_date, "%j"))
+calendar_df$dow <- as.numeric(format(calendar_df$calendar_date, "%w"))
+calendar_df$woy <- as.numeric(format(calendar_df$calendar_date, "%U")) + 1
+
+# Convert df$value to numeric
+calendar_df$value <- as.numeric(calendar_df$value)
+
+calendar_df$dowmapped <- ordered(calendar_df$dow, levels = 6:0)
+levels(calendar_df$dowmapped) <- rev(c("Sunday", "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"))
+
+calendar_plot <- ggplot(calendar_df, aes(woy, dowmapped, fill = value)) + 
+  geom_tile(colour = "darkgrey") + 
+  theme(text = element_text(size=20)) +
+  facet_wrap(~year, ncol = 1) + # Facet for years
+  coord_equal(xlim = c(2.5,54)) + # square tiles
+  scale_x_continuous(breaks = 53/12*(1:12)-1.5, labels = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")) + 
+  scale_fill_gradientn(colours = c("#ffffff", "#fbffd6", "#FFFFBD", "#FFAE63", "#db2c2c", "#A62424"), na.value = "white",
+                       name = "Amount of crime",
+                       guide = guide_colorbar(
+                         direction = "horizontal",
+                         barheight = unit(2, units = "mm"),
+                         barwidth = unit(75, units = "mm"),
+                         title.position = 'top',
+                         title.hjust = 0.5
+                       )) +
+  labs(x = NULL, 
+       y = NULL, 
+       title = "", 
+       subtitle = "")
+
+my.lines<-data.frame(x=numeric(), 
+                     y=numeric(), 
+                     xend=numeric(), 
+                     yend=numeric(), 
+                     year=character())
+
+for(years in levels(calendar_df$year)){
+  calendar_df.subset <- calendar_df[calendar_df$year == years,]
+  
+  y.start <- calendar_df.subset$dow[1]
+  x.start <- calendar_df.subset$woy[1]
+  
+  x.top.left <- ifelse(y.start == 0, x.start - 0.5, x.start + 0.5)
+  y.top.left <- 7.5
+  x.top.right <- calendar_df.subset$woy[nrow(calendar_df.subset)] + 0.5
+  y.top.right <- 7.5
+  
+  x.mid.left01 <- x.start - 0.5
+  y.mid.left01 <- 7.5 - y.start
+  x.mid.left02 <- x.start + 0.5
+  y.mid.left02 <- 7.5 - y.start
+  
+  x.bottom.left <- x.start - 0.5
+  y.bottom.left <- 0.5
+  x.bottom.right <- ifelse(y.start == 6, calendar_df.subset$woy[nrow(calendar_df.subset)] + 0.5, calendar_df.subset$woy[nrow(calendar_df.subset)] - 0.5)
+  y.bottom.right <- 0.5
+  
+  my.lines<-rbind(my.lines,
+                  data.frame(x    = c(x.top.left, x.bottom.left, x.mid.left01, x.top.left, x.bottom.left), 
+                             y    = c(y.top.left, y.bottom.left, y.mid.left01, y.top.left, y.bottom.left),
+                             xend = c(x.top.right, x.bottom.right, x.mid.left02, x.mid.left02, x.mid.left01), 
+                             yend = c(y.top.right, y.bottom.right, y.mid.left02, y.mid.left02, y.mid.left01), 
+                             year = years))
+  
+  # lines to separate months
+  for (j in 1:12)  {
+    calendar_df.subset.month <- max(calendar_df.subset$doy[calendar_df.subset$month == j])
+    x.month <- calendar_df.subset$woy[calendar_df.subset.month]
+    y.month <- calendar_df.subset$dow[calendar_df.subset.month]
+    
+    x.top.mid <- x.month + 0.5
+    y.top.mid <- 7.5
+    
+    x.mid.mid01 <- x.month - 0.5
+    y.mid.mid01 <- 7.5 - y.month - 1
+    x.mid.mid02 <- x.month + 0.5
+    y.mid.mid02 <- 7.5 - y.month - 1
+    
+    x.bottom.mid <- ifelse(y.month == 6, x.month + 0.5, x.month - 0.5)
+    y.bottom.mid <- 0.5
+    
+    my.lines<-rbind(my.lines,
+                    data.frame(x    = c(x.top.mid, x.mid.mid01, x.mid.mid01), 
+                               y    = c(y.top.mid, y.mid.mid01, y.mid.mid01),
+                               xend = c(x.mid.mid02, x.mid.mid02, x.bottom.mid), 
+                               yend = c(y.mid.mid02, y.mid.mid02, y.bottom.mid), 
+                               year = years))
+    
+  }
+  
+}
+
+# add lines to separate months 
+calendar_plot <- calendar_plot + geom_segment(data=my.lines, aes(x,y,xend=xend, yend=yend), lineend = "square", color = "black", inherit.aes=FALSE)
+############################
+
 # Data for Place diagrams
 data_place <- data
 data_place <- data_place %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
@@ -166,8 +274,16 @@ ui <- fluidPage(
     column(12,
            plotOutput("VictimsPlot"))
   ),
-  checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE)
+  checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE),
   
+  h2("Crime rate over the years"),
+  fluidRow(
+    column(12,
+           plotOutput("CalendarPlot",
+                      width = "100%",
+                      height = 800)
+    ),
+  ),
 )
 
 # Define server logic required to draw a histogram
@@ -351,6 +467,8 @@ server <- function(input, output, session) {
     })
            
   output$VictimsPlot <- renderPlot(VictimsPlot())
+  
+  output$CalendarPlot <- renderPlot(calendar_plot)
     
 }
 
