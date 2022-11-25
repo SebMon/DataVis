@@ -5,9 +5,10 @@ library(fastmap)
 library(lubridate)
 library(gganimate)
 library(dplyr)
+library(tidyverse)
 
 # Load data
-data <- read.csv('./data/Crime.csv')
+data <- read.csv('./data/sample.csv')
 data <- mutate(data, Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 data$Start_Date_Time_Date_Objects <- as.Date(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 
@@ -42,8 +43,8 @@ ifelse(grepl("Residence", Place, fixed = TRUE),
                                                                "Other"
 )))))))))))
 
-data_place$Start_Date_Time <- as.Date(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
-data_place$year <- floor_date(data_place$Start_Date_Time, unit="year")
+data_place$Start_Date <- as.Date(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
+data_place$year <- floor_date(data_place$Start_Date, unit="year")
 
 
 # Data taken from here: https://datacommons.org/tools/timeline#place=geoId%2F24031&statsVar=Count_Person&chart=%7B%22count%22%3A%7B%22pc%22%3Afalse%7D%7D
@@ -59,16 +60,16 @@ population$set("2021", 1054827)
 # Preprocessing
 
 ##### Calculate circular density for time-of-day plot
-data$Hour <- as.integer(format(as.POSIXct(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%H"))
-data$Minute <- as.integer(format(as.POSIXct(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%M"))
-data$HourDec <- data$Hour + (data$Minute / 60)
-data$TimeRad <- 2 * pi * (data$HourDec/24)
+data_place$Hour <- as.integer(format(as.POSIXct(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%H"))
+data_place$Minute <- as.integer(format(as.POSIXct(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%M"))
+data_place$HourDec <- data_place$Hour + (data_place$Minute / 60)
+data_place$TimeRad <- 2 * pi * (data_place$HourDec/24)
 
-data <- subset(data, !is.na(data$TimeRad))
+data_place <- subset(data_place, !is.na(data_place$TimeRad))
 
-basic_time_of_day_dens = density(data$TimeRad, from = 0, to = 2 * pi)
+basic_time_of_day_dens = density(data_place$TimeRad, from = 0, to = 2 * pi)
 
-rad_time_of_day_density = circular::density.circular(circular::circular(data$TimeRad,
+rad_time_of_day_density = circular::density.circular(circular::circular(data_place$TimeRad,
                                                             type="angle",
                                                             units="radians",
                                                             rotation="clock"),
@@ -76,7 +77,7 @@ rad_time_of_day_density = circular::density.circular(circular::circular(data$Tim
                                          bw = basic_time_of_day_dens$bw) 
 
 time_of_day_density = data.frame(time = as.numeric(24*((2 * pi) + rad_time_of_day_density$x) / (2*pi)),
-                          likelyhood = rad_time_of_day_density$y/(24/(2*pi))) # Gotta make sure the division is legit
+                          likelyhood = rad_time_of_day_density$y/(24/(2*pi)))
 
 create_crimetype_gif <- function() {
   # Making the date column actual date objects
@@ -100,6 +101,10 @@ create_crimetype_gif <- function() {
   anim_save("./www/crimebyTypeOverTime.gif", animate(the_gif, height = 300, width = 800))
 }
 
+##### Create dataset for bin2d victim plot
+bin2d_vict_data <- data_place %>% mutate(Victims = as.character(ifelse(Victims>=7, "7 or more", Victims)))
+sum_of_victims_in_places <- bin2d_vict_data %>% group_by(Place) %>% count() %>% spread(Place, n)
+
 # Uncomment when needed to update, and before deployment
 # create_crimetype_gif()
 
@@ -107,18 +112,37 @@ create_crimetype_gif <- function() {
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   h1("Crimes in Montgomery county"),
+  div(
+    h2("At what time of the day do crimes happen?"),
+    
+    fluidRow(
+      column( 8,
+        plotOutput("TimeOfDayPlot"),
+      ),
   
-  h2("At what time of the day do crimes happen?"),
-  
-  fluidRow(
-    column( 8,
-      plotOutput("TimeOfDayPlot"),
+      column( 4,
+        plotOutput("TimeOfDayPlotCircular"),
+      )
     ),
+    fluidRow(
+      column( 4,
+        checkboxGroupInput("TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place))),
 
-    column( 4,
-      plotOutput("TimeOfDayPlotCircular")
-    )
+        actionLink("selectAllPlaces", "Select All"),
+        actionLink("unselectAllPlaces", "Unselect All")
+      ),
+      column( 4,
+        checkboxGroupInput("TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1))),
+        actionLink("selectAllCrimeTypes", "Select All"),
+        actionLink("unselectAllCrimeTypes", "Unselect All"),
+      ),
+      column( 4,
+        checkboxInput("TODShadow", "Show overall distribution in background", value = FALSE),
+        checkboxInput("TODDensity", "Show density curve", value = FALSE)
+        )
+    ),
   ),
+  
   h2("What type of crime is most prevalent over time?"),
   fluidRow(
     img(src="crimebyTypeOverTime.gif")
@@ -134,43 +158,160 @@ ui <- fluidPage(
     column( 12,
       plotOutput("linePlotPlaces")
     )
-  )
+  ),
+  h2("How are the number of victims per crime distributed across different places"),
+  fluidRow(
+    column(12,
+           plotOutput("VictimsPlot"))
+  ),
+  checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE)
   
 )
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
-  output$TimeOfDayPlot <- renderPlot(
-      ggplot(data, mapping=aes(x=Hour)) +
-        #coord_polar() +
-        geom_bar(aes(y = (..count..)/sum(..count..)), 
-                 position = position_nudge(x = 0.5), 
-                 fill="gray", 
-                 colour="black",
-                 width=1) +
-        scale_y_continuous(name="Density") +
-        scale_x_continuous(name="Hour",
-                           breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24)) +
-        geom_line(time_of_day_density, 
-                  mapping = aes(x=time, y=likelyhood), 
-                  color="red")
-  )
+server <- function(input, output, session) {
   
-  output$TimeOfDayPlotCircular <- renderPlot(
-    ggplot(data, mapping=aes(x=Hour)) +
-      coord_polar() +
-      geom_bar(aes(y = (..count..)/sum(..count..)), 
+  TODData <- reactive({
+    return(
+      data_place %>%
+        filter(Place %in% input$TODPlaces) %>%
+        filter(Crime.Name1 %in% input$TODCrimeTypes)
+      )
+  })
+  
+  TODDensity <- reactive({
+    local_data_place <- TODData()
+    if (dim(local_data_place)[1] == 0) {
+      to_return = data.frame(matrix(ncol = 2, nrow = 0))
+      colnames(to_return) <- c("time", "likelyhood")
+      return(to_return)
+    }
+    local_data_place$Hour <- as.integer(format(as.POSIXct(local_data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%H"))
+    local_data_place$Minute <- as.integer(format(as.POSIXct(local_data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p"), format="%M"))
+    local_data_place$HourDec <- local_data_place$Hour + (local_data_place$Minute / 60)
+    local_data_place$TimeRad <- 2 * pi * (local_data_place$HourDec/24)
+    
+    local_data_place <- subset(local_data_place, !is.na(local_data_place$TimeRad))
+    
+    local_basic_time_of_day_dens = density(local_data_place$TimeRad, from = 0, to = 2 * pi)
+    
+    local_rad_time_of_day_density = circular::density.circular(circular::circular(local_data_place$TimeRad,
+                                                                            type="angle",
+                                                                            units="radians",
+                                                                            rotation="clock"),
+                                                         kernel = "wrappednormal",
+                                                         bw = local_basic_time_of_day_dens$bw) 
+    
+    local_time_of_day_density = data.frame(time = as.numeric(24*((2 * pi) + local_rad_time_of_day_density$x) / (2*pi)),
+                                     likelyhood = local_rad_time_of_day_density$y/(24/(2*pi)))
+    
+    return(local_time_of_day_density)
+  })
+  
+  observe({
+    if(input$selectAllPlaces == 0) return(NULL)
+    else {
+      updateCheckboxGroupInput(session, "TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place)))
+    }
+  })
+  
+  observe({
+    if(input$unselectAllPlaces == 0) return(NULL)
+    else {
+      updateCheckboxGroupInput(session, "TODPlaces", "Places", sort(unique(data_place$Place)))
+    }
+  })
+  
+  observe({
+    if(input$selectAllCrimeTypes == 0) return(NULL)
+    else {
+      updateCheckboxGroupInput(session, "TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1)))
+    }
+  })
+  
+  observe({
+    if(input$unselectAllCrimeTypes == 0) return(NULL)
+    else {
+      updateCheckboxGroupInput(session, "TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)))
+    }
+  })
+  
+  TODPlot <- reactive({
+    plot <- ggplot(mapping=aes(x=Hour))
+    plot <- plot +
+      geom_bar(TODData(), mapping = aes(y = (..count..)/sum(..count..)), 
                position = position_nudge(x = 0.5), 
                fill="gray", 
                colour="black",
-               width=1) +
+               width=1)
+    if (input$TODShadow) {
+      plot <- plot +
+        geom_bar(data_place, mapping = aes(y = (..count..)/sum(..count..)), 
+                 position = position_nudge(x = 0.5), 
+                 fill="blue", 
+                 alpha=0.1,
+                 width=1)
+    }
+    plot <- plot +
       scale_y_continuous(name="Density") +
       scale_x_continuous(name="Hour",
-                         breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24)) +
-      geom_line(time_of_day_density, 
-                mapping = aes(x=time, y=likelyhood), 
-                color="red")
-  )
+                         breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24))
+    if (input$TODDensity) {
+      plot <- plot +
+        geom_line(TODDensity(), 
+                  mapping = aes(x=time, y=likelyhood), 
+                  color="red")
+    }
+    if (input$TODShadow && input$TODDensity) {
+      plot <- plot +
+        geom_line(time_of_day_density, 
+                  mapping = aes(x=time, y=likelyhood), 
+                  color="blue",
+                  alpha=0.25)
+    }
+    return(plot)
+  })
+  
+  RoundTODPlot <- reactive({
+    plot <- ggplot(mapping=aes(x=Hour)) +
+      coord_polar()
+    plot <- plot +
+      geom_bar(TODData(), mapping = aes(y = (..count..)/sum(..count..)), 
+               position = position_nudge(x = 0.5), 
+               fill="gray", 
+               colour="black",
+               width=1)
+    if (input$TODShadow) {
+      plot <- plot +
+        geom_bar(data_place, mapping = aes(y = (..count..)/sum(..count..)), 
+                 position = position_nudge(x = 0.5), 
+                 fill="blue", 
+                 alpha=0.1,
+                 width=1)
+    }
+    plot <- plot +
+      scale_y_continuous(name="Density") +
+      scale_x_continuous(name="Hour",
+                         breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24))
+    if (input$TODDensity) {
+      plot <- plot +
+        geom_line(TODDensity(), 
+                  mapping = aes(x=time, y=likelyhood), 
+                  color="red")
+    }
+    if (input$TODShadow && input$TODDensity) {
+      plot <- plot +
+        geom_line(time_of_day_density, 
+                  mapping = aes(x=time, y=likelyhood), 
+                  color="blue",
+                  alpha=0.25)
+    }
+    return(plot)
+  })
+  
+  output$TimeOfDayPlot <- renderPlot(TODPlot())
+  
+  output$TimeOfDayPlotCircular <- renderPlot(RoundTODPlot())
   
   output$stackedBarChart <- renderPlot(
     ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
@@ -192,10 +333,24 @@ server <- function(input, output) {
       geom_line()
   )
   
-  
+  VictimsPlot <- 
+    reactive({
+      if (input$VictimPlotNormalize){
+        return(ggplot(bin2d_vict_data) +
+          geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=100*..count../as.integer(sum_of_victims_in_places[y]))) +
+          stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = round(100*..count../as.integer(sum_of_victims_in_places[y]), digits = 3))) +
+          scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.0001, 100), breaks=c(0.002, 0.06, 2, 64)))
+      } else {
+        return(ggplot(bin2d_vict_data) +
+          geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=..count..)) +
+          stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = ..count..)) +
+            scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Crimes"))
+      }
+    })
+           
+  output$VictimsPlot <- renderPlot(VictimsPlot())
     
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
