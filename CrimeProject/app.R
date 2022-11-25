@@ -187,6 +187,7 @@ server <- function(input, output) {
       group_by(Place, year) %>%
       add_count() %>%
       ungroup() %>%
+      filter(!(data_place$year == "2016-01-01" | data_place$year == "2022-01-01")) %>%
       ggplot(aes(x=year, y=n, color=Place)) + 
       geom_line()
   )
