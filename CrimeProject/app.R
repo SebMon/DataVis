@@ -8,7 +8,7 @@ library(dplyr)
 library(tidyverse)
 
 # Load data
-data <- read.csv('./data/sample.csv')
+data <- read.csv('./data/Crime.csv')
 data <- mutate(data, Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 data$Start_Date_Time_Date_Objects <- as.Date(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 
@@ -18,7 +18,7 @@ population = fastmap()
 #calendar_data <- read.csv('../data/sample.csv')
 #calendar_date <- as.Date(data$Start_Date_Time , "%m/%d/%Y")
 calendar_date <- data$Start_Date_Time_Date_Objects
-calendar_date
+# calendar_date
 calendar_minDate <- "2017-01-01"
 calendar_maxDate <- "2021-12-31"
 calendar_date <- subset(calendar_date, calendar_date >= calendar_minDate & calendar_date <= calendar_maxDate)
