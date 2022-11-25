@@ -115,6 +115,8 @@ ui <- fluidPage(
   div(
     h2("At what time of the day do crimes happen?"),
     
+    p("This diagram shows how crimes are distributed over the day. The filters can be used to select specific combinations of places and crime types. It is possible to overlay a density curve over the bars. It is also possible to see the overall distribution (all places and crime types) in blue, along with the distribution of crimes after applying your filters."),
+    
     fluidRow(
       column( 8,
         plotOutput("TimeOfDayPlot"),
