@@ -38,6 +38,8 @@ calendar_df$value <- as.numeric(calendar_df$value)
 calendar_df$dowmapped <- ordered(calendar_df$dow, levels = 6:0)
 levels(calendar_df$dowmapped) <- rev(c("Sunday", "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"))
 
+temp_calendar <- filter(calendar_df, calendar_df$calendar_date > '2018-01-01')
+
 calendar_plot <- ggplot(calendar_df, aes(woy, dowmapped, fill = value)) + 
   geom_tile(colour = "darkgrey") + 
   theme(text = element_text(size=20)) +
@@ -204,13 +206,13 @@ create_crimetype_gif <- function() {
   }
   
   the_gif <- ggplot(crimeByTypeOverTime, aes(x=month, y=percentage, group=crime, color=crime)) +
-    geom_line() +
+    geom_line(size = 2) +
     theme(axis.text.x = element_text(angle=90)) +
     xlab("Month") + ylab("% of crime") + 
     scale_x_date(date_labels = "%b%Y") +
     transition_reveal(month)
   
-  anim_save("./www/crimebyTypeOverTime.gif", animate(the_gif, height = 300, width = 800))
+  anim_save("./www/crimebyTypeOverTime.gif", animate(the_gif, height = 300, width = 1400, renderer = gifski_renderer(loop = FALSE)))
 }
 
 ##### Create dataset for bin2d victim plot
