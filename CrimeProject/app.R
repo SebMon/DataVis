@@ -129,31 +129,31 @@ calendar_plot <- calendar_plot + geom_segment(data=my.lines, aes(x,y,xend=xend, 
 # Data for Place diagrams
 data_place <- data
 data_place <- data_place %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
-                                                   "Street",
-                                                   ifelse(grepl("Residence", Place, fixed = TRUE), 
-                                                          "Residence",
-                                                          ifelse(grepl("Retail", Place, fixed = TRUE),
-                                                                 "Retail (shops)", 
-                                                                 ifelse((Place == "Grocery/Supermarket")
-                                                                        | (Place == "Gas Station"),
-                                                                        "Gas station", 
-                                                                        ifelse(grepl("Parking", Place, fixed = TRUE),
-                                                                               "Parking lot/garage",
-                                                                               ifelse(grepl("School", Place, fixed = TRUE),
-                                                                                      "School/University/College",
-                                                                                      ifelse(grepl("Government", Place, fixed = TRUE),
-                                                                                             "Government building",
-                                                                                             ifelse(grepl("Bank", Place, fixed = TRUE),
-                                                                                                    "Bank",
-                                                                                                    ifelse(grepl("Commercial", Place, fixed = TRUE)
-                                                                                                           | grepl("Restaurant", Place, fixed = TRUE)
-                                                                                                           | grepl("Bar", Place, fixed = TRUE)
-                                                                                                           | grepl("Hotel/Motel", Place, fixed = TRUE),
-                                                                                                           "Commercial",
-                                                                                                           ifelse(grepl("Store", Place, fixed = TRUE),
-                                                                                                                  "Store",
-                                                                                                                  "Other"
-                                                                                                           )))))))))))
+"Street",
+ifelse(grepl("Residence", Place, fixed = TRUE), 
+       "Residence",
+       ifelse(grepl("Retail", Place, fixed = TRUE),
+              "Retail (shops)",
+              ifelse((Place == "Grocery/Supermarket")
+                     | (Place == "Gas Station"),
+                     "Gas station",
+                     ifelse(grepl("Parking", Place, fixed = TRUE),
+                            "Parking lot/garage",
+                            ifelse(grepl("School", Place, fixed = TRUE),
+                                   "School/University/College",
+                                   ifelse(grepl("Government", Place, fixed = TRUE),
+                                          "Government building",
+                                          ifelse(grepl("Bank", Place, fixed = TRUE),
+                                                 "Bank",
+                                                 ifelse(grepl("Commercial", Place, fixed = TRUE)
+                                                        | grepl("Restaurant", Place, fixed = TRUE)
+                                                        | grepl("Bar", Place, fixed = TRUE)
+                                                        | grepl("Hotel/Motel", Place, fixed = TRUE),
+                                                        "Commercial",
+                                                        ifelse(grepl("Store", Place, fixed = TRUE),
+                                                               "Store",
+                                                               "Other"
+)))))))))))
 
 data_place$Start_Date <- as.Date(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 data_place$year <- floor_date(data_place$Start_Date, unit="year")
