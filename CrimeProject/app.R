@@ -129,31 +129,31 @@ calendar_plot <- calendar_plot + geom_segment(data=my.lines, aes(x,y,xend=xend, 
 # Data for Place diagrams
 data_place <- data
 data_place <- data_place %>% mutate(Place = ifelse(grepl("Street", Place, fixed = TRUE),
-"Street",
-ifelse(grepl("Residence", Place, fixed = TRUE), 
-       "Residence",
-       ifelse(grepl("Retail", Place, fixed = TRUE),
-              "Retail (shops)", 
-              ifelse((Place == "Grocery/Supermarket")
-                     | (Place == "Gas Station"),
-                     "Gas station", 
-                     ifelse(grepl("Parking", Place, fixed = TRUE),
-                            "Parking lot/garage",
-                            ifelse(grepl("School", Place, fixed = TRUE),
-                                   "School/University/College",
-                                   ifelse(grepl("Government", Place, fixed = TRUE),
-                                          "Government building",
-                                          ifelse(grepl("Bank", Place, fixed = TRUE),
-                                                 "Bank",
-                                                 ifelse(grepl("Commercial", Place, fixed = TRUE)
-                                                        | grepl("Restaurant", Place, fixed = TRUE)
-                                                        | grepl("Bar", Place, fixed = TRUE)
-                                                        | grepl("Hotel/Motel", Place, fixed = TRUE),
-                                                        "Commercial",
-                                                        ifelse(grepl("Store", Place, fixed = TRUE),
-                                                               "Store",
-                                                               "Other"
-)))))))))))
+                                                   "Street",
+                                                   ifelse(grepl("Residence", Place, fixed = TRUE), 
+                                                          "Residence",
+                                                          ifelse(grepl("Retail", Place, fixed = TRUE),
+                                                                 "Retail (shops)", 
+                                                                 ifelse((Place == "Grocery/Supermarket")
+                                                                        | (Place == "Gas Station"),
+                                                                        "Gas station", 
+                                                                        ifelse(grepl("Parking", Place, fixed = TRUE),
+                                                                               "Parking lot/garage",
+                                                                               ifelse(grepl("School", Place, fixed = TRUE),
+                                                                                      "School/University/College",
+                                                                                      ifelse(grepl("Government", Place, fixed = TRUE),
+                                                                                             "Government building",
+                                                                                             ifelse(grepl("Bank", Place, fixed = TRUE),
+                                                                                                    "Bank",
+                                                                                                    ifelse(grepl("Commercial", Place, fixed = TRUE)
+                                                                                                           | grepl("Restaurant", Place, fixed = TRUE)
+                                                                                                           | grepl("Bar", Place, fixed = TRUE)
+                                                                                                           | grepl("Hotel/Motel", Place, fixed = TRUE),
+                                                                                                           "Commercial",
+                                                                                                           ifelse(grepl("Store", Place, fixed = TRUE),
+                                                                                                                  "Store",
+                                                                                                                  "Other"
+                                                                                                           )))))))))))
 
 data_place$Start_Date <- as.Date(data_place$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 data_place$year <- floor_date(data_place$Start_Date, unit="year")
@@ -184,14 +184,14 @@ data_place_TOD <- sample_n(data_place, 10000)
 basic_time_of_day_dens = density(data_place_TOD$TimeRad, from = 0, to = 2 * pi)
 
 rad_time_of_day_density = circular::density.circular(circular::circular(data_place_TOD$TimeRad,
-                                                            type="angle",
-                                                            units="radians",
-                                                            rotation="clock"),
-                                         kernel = "wrappednormal",
-                                         bw = basic_time_of_day_dens$bw) 
+                                                                        type="angle",
+                                                                        units="radians",
+                                                                        rotation="clock"),
+                                                     kernel = "wrappednormal",
+                                                     bw = basic_time_of_day_dens$bw) 
 
 time_of_day_density = data.frame(time = as.numeric(24*((2 * pi) + rad_time_of_day_density$x) / (2*pi)),
-                          likelyhood = rad_time_of_day_density$y/(24/(2*pi)))
+                                 likelyhood = rad_time_of_day_density$y/(24/(2*pi)))
 
 create_crimetype_gif <- function() {
   # Making the date column actual date objects
@@ -251,10 +251,12 @@ ui <- fluidPage(
                       height = 800)
     ),
   ),
-  
-  h2("What type of crime is most prevalent over time?"),
-  fluidRow(
-    img(src="crimebyTypeOverTime.gif")
+  div(
+    h2("What type of crime is most prevalent over time?"),
+    img(src="crimebyTypeOverTime.gif"),
+    p('Over the first 3 years, from 2016 to 2019, the distribution remains relatively stable with some slight fluctuations. Crimes classified as Crime Against Property take up the vast majority, fluctuating between about 38% and 48%.'),
+    p('Between 2019 and 2020 there is a small decrease in Crimes Against Society with a small general increase in Crimes Against Property, but in early 2020 this trend witnesses a sudden spike. As Crimes Against Society sharply decreases, Crimes Against Property does the exact opposite in sharp increase. After this point, Crimes Against Society remains at around 15-18% where it used to be around 28%-32%, and Crimes Against Property stays around 48%-55%, with a temporary exception. This sudden change could be a sign that some very common crimes that were previously categorised as Crime Against Society would after 2020 be classified as Crime Against Property. Similarly, in mid 2021, crimes classified as Other experience a sudden and very temporary drop, only to go back to its usual average at around the 20%-24% mark. This decrease matches an increase in Crimes Against Property, and could again be a sign of categorisation changing, but this time temporarily.'),
+    p('While it is possible that these sudden changes could occur due to other events (Covid, protests, etc.), it seems unlikely that criminals suddenly, almost overnight, abandoned one type of crime to switch over to another type, without it affecting the rest of the categories.')
   ),
   
   div(
@@ -264,29 +266,29 @@ ui <- fluidPage(
     
     fluidRow(
       column( 8,
-        plotOutput("TimeOfDayPlot"),
+              plotOutput("TimeOfDayPlot"),
       ),
-  
+      
       column( 4,
-        plotOutput("TimeOfDayPlotCircular"),
+              plotOutput("TimeOfDayPlotCircular"),
       )
     ),
     fluidRow(
       column( 4,
-        checkboxGroupInput("TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place))),
-
-        actionLink("selectAllPlaces", "Select All"),
-        actionLink("unselectAllPlaces", "Unselect All")
+              checkboxGroupInput("TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place))),
+              
+              actionLink("selectAllPlaces", "Select All"),
+              actionLink("unselectAllPlaces", "Unselect All")
       ),
       column( 4,
-        checkboxGroupInput("TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1))),
-        actionLink("selectAllCrimeTypes", "Select All"),
-        actionLink("unselectAllCrimeTypes", "Unselect All"),
+              checkboxGroupInput("TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1))),
+              actionLink("selectAllCrimeTypes", "Select All"),
+              actionLink("unselectAllCrimeTypes", "Unselect All"),
       ),
       column( 4,
-        checkboxInput("TODShadow", "Show overall distribution in background", value = FALSE),
-        checkboxInput("TODDensity", "Show density curve", value = FALSE)
-        )
+              checkboxInput("TODShadow", "Show overall distribution in background", value = FALSE),
+              checkboxInput("TODDensity", "Show density curve", value = FALSE)
+      )
     ),
   ),
   
@@ -307,7 +309,7 @@ server <- function(input, output, session) {
       data_place_TOD %>%
         filter(Place %in% input$TODPlaces) %>%
         filter(Crime.Name1 %in% input$TODCrimeTypes)
-      )
+    )
   })
   
   TODDensity <- reactive({
@@ -327,14 +329,14 @@ server <- function(input, output, session) {
     local_basic_time_of_day_dens = density(local_data_place$TimeRad, from = 0, to = 2 * pi)
     
     local_rad_time_of_day_density = circular::density.circular(circular::circular(local_data_place$TimeRad,
-                                                                            type="angle",
-                                                                            units="radians",
-                                                                            rotation="clock"),
-                                                         kernel = "wrappednormal",
-                                                         bw = local_basic_time_of_day_dens$bw) 
+                                                                                  type="angle",
+                                                                                  units="radians",
+                                                                                  rotation="clock"),
+                                                               kernel = "wrappednormal",
+                                                               bw = local_basic_time_of_day_dens$bw) 
     
     local_time_of_day_density = data.frame(time = as.numeric(24*((2 * pi) + local_rad_time_of_day_density$x) / (2*pi)),
-                                     likelyhood = local_rad_time_of_day_density$y/(24/(2*pi)))
+                                           likelyhood = local_rad_time_of_day_density$y/(24/(2*pi)))
     
     return(local_time_of_day_density)
   })
@@ -470,21 +472,21 @@ server <- function(input, output, session) {
     reactive({
       if (input$VictimPlotNormalize){
         return(ggplot(bin2d_vict_data) +
-          geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=100*..count../as.integer(sum_of_victims_in_places[y]))) +
-          stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = round(100*..count../as.integer(sum_of_victims_in_places[y]), digits = 3))) +
-          scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.001, 100)))
+                 geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=100*..count../as.integer(sum_of_victims_in_places[y]))) +
+                 stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = round(100*..count../as.integer(sum_of_victims_in_places[y]), digits = 3))) +
+                 scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.001, 100)))
       } else {
         return(ggplot(bin2d_vict_data) +
-          geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=..count..)) +
-          stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = ..count..)) +
-            scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Crimes"))
+                 geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=..count..)) +
+                 stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = ..count..)) +
+                 scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Crimes"))
       }
     })
-           
+  
   output$VictimsPlot <- renderPlot(VictimsPlot())
   
   output$CalendarPlot <- renderPlot(calendar_plot)
-    
+  
 }
 
 # Run the application 
