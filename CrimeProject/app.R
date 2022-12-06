@@ -212,7 +212,8 @@ create_crimetype_gif <- function() {
     scale_x_date(date_labels = "%b%Y") +
     transition_reveal(month)
   
-  anim_save("./www/crimebyTypeOverTime.gif", animate(the_gif, height = 300, width = 1400, renderer = gifski_renderer(loop = FALSE)))
+  #anim_save("./www/crimebyTypeOverTime.gif", animate(the_gif, height = 300, width = 1400, renderer = gifski_renderer(loop = FALSE)))
+  anim_save("./www/crimebyTypeOverTime.mp4", animate(the_gif, height = 300, width = 1400, renderer = av_renderer()))
 }
 
 ##### Create dataset for bin2d victim plot
@@ -220,84 +221,96 @@ bin2d_vict_data <- data_place %>% mutate(Victims = as.character(ifelse(Victims>=
 sum_of_victims_in_places <- bin2d_vict_data %>% group_by(Place) %>% count() %>% spread(Place, n)
 
 # Uncomment when needed to update, and before deployment
-# create_crimetype_gif()
+#create_crimetype_gif()
 
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   h1("Crimes in Montgomery county"),
-  
-  h2("Which places have the highest amount of crimes?"),
-  fluidRow(
-    column( 6,
-            plotOutput("stackedBarChart")
-    ),
-    column( 6,
-            plotOutput("stackedBarChartNorm")
-    ),
-    column( 12,
-            h3("And how has that changed over time?")
-    ),
-    column( 12,
-            plotOutput("linePlotPlaces")
-    )
-  ),
-  
-  h2("Crime rate over the years"),
-  fluidRow(
-    column(12,
-           plotOutput("CalendarPlot",
-                      width = "100%",
-                      height = 800)
-    ),
-  ),
-  div(
-    h2("What type of crime is most prevalent over time?"),
-    img(src="crimebyTypeOverTime.gif"),
-    p('Over the first 3 years, from 2016 to 2019, the distribution remains relatively stable with some slight fluctuations. Crimes classified as Crime Against Property take up the vast majority, fluctuating between about 38% and 48%.'),
-    p('Between 2019 and 2020 there is a small decrease in Crimes Against Society with a small general increase in Crimes Against Property, but in early 2020 this trend witnesses a sudden spike. As Crimes Against Society sharply decreases, Crimes Against Property does the exact opposite in sharp increase. After this point, Crimes Against Society remains at around 15-18% where it used to be around 28%-32%, and Crimes Against Property stays around 48%-55%, with a temporary exception. This sudden change could be a sign that some very common crimes that were previously categorised as Crime Against Society would after 2020 be classified as Crime Against Property. Similarly, in mid 2021, crimes classified as Other experience a sudden and very temporary drop, only to go back to its usual average at around the 20%-24% mark. This decrease matches an increase in Crimes Against Property, and could again be a sign of categorisation changing, but this time temporarily.'),
-    p('While it is possible that these sudden changes could occur due to other events (Covid, protests, etc.), it seems unlikely that criminals suddenly, almost overnight, abandoned one type of crime to switch over to another type, without it affecting the rest of the categories.')
-  ),
-  
-  div(
-    h2("At what time of the day do crimes happen?"),
-    
-    p("This diagram shows how crimes are distributed over the day. The filters can be used to select specific combinations of places and crime types. It is possible to overlay a density curve over the bars. It is also possible to see the overall distribution (all places and crime types) in blue, along with the distribution of crimes after applying your filters."),
-    
-    fluidRow(
-      column( 8,
-              plotOutput("TimeOfDayPlot"),
+  tabsetPanel(
+    tabPanel(
+      "Places",
+      h2("Which places have the highest amount of crimes?"),
+      fluidRow(
+        column( 6,
+                plotOutput("stackedBarChart")
+        ),
+        column( 6,
+                plotOutput("stackedBarChartNorm")
+        ),
+        column( 12,
+                h3("And how has that changed over time?")
+        ),
+        column( 12,
+                plotOutput("linePlotPlaces")
+        )
+      )),
+      
+      tabPanel(
+        "Calendar",
+        h2("Crime rate over the years"),
+        fluidRow(
+          column(12,
+                 plotOutput("CalendarPlot",
+                            width = "100%",
+                            height = 800)
+          ),
+        )
       ),
       
-      column( 4,
-              plotOutput("TimeOfDayPlotCircular"),
-      )
-    ),
-    fluidRow(
-      column( 4,
-              checkboxGroupInput("TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place))),
-              
-              actionLink("selectAllPlaces", "Select All"),
-              actionLink("unselectAllPlaces", "Unselect All")
+      tabPanel(
+        "gif",
+        h2("What type of crime is most prevalent over time?"),
+        #img(src="crimebyTypeOverTime.gif"),
+        tags$video(id="video2", type="video/mp4", src="crimebyTypeOverTime.mp4", controls="controls"),
+        p('Over the first 3 years, from 2016 to 2019, the distribution remains relatively stable with some slight fluctuations. Crimes classified as Crime Against Property take up the vast majority, fluctuating between about 38% and 48%.'),
+        p('Between 2019 and 2020 there is a small decrease in Crimes Against Society with a small general increase in Crimes Against Property, but in early 2020 this trend witnesses a sudden spike. As Crimes Against Society sharply decreases, Crimes Against Property does the exact opposite in sharp increase. After this point, Crimes Against Society remains at around 15-18% where it used to be around 28%-32%, and Crimes Against Property stays around 48%-55%, with a temporary exception. This sudden change could be a sign that some very common crimes that were previously categorised as Crime Against Society would after 2020 be classified as Crime Against Property. Similarly, in mid 2021, crimes classified as Other experience a sudden and very temporary drop, only to go back to its usual average at around the 20%-24% mark. This decrease matches an increase in Crimes Against Property, and could again be a sign of categorisation changing, but this time temporarily.'),
+        p('While it is possible that these sudden changes could occur due to other events (Covid, protests, etc.), it seems unlikely that criminals suddenly, almost overnight, abandoned one type of crime to switch over to another type, without it affecting the rest of the categories.')
       ),
-      column( 4,
-              checkboxGroupInput("TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1))),
-              actionLink("selectAllCrimeTypes", "Select All"),
-              actionLink("unselectAllCrimeTypes", "Unselect All"),
+      
+      tabPanel(
+        "Clock",
+        h2("At what time of the day do crimes happen?"),
+        
+        p("This diagram shows how crimes are distributed over the day. The filters can be used to select specific combinations of places and crime types. It is possible to overlay a density curve over the bars. It is also possible to see the overall distribution (all places and crime types) in blue, along with the distribution of crimes after applying your filters."),
+        
+        fluidRow(
+          column( 8,
+                  plotOutput("TimeOfDayPlot"),
+          ),
+          
+          column( 4,
+                  plotOutput("TimeOfDayPlotCircular"),
+          )
+        ),
+        fluidRow(
+          column( 4,
+                  checkboxGroupInput("TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place))),
+                  
+                  actionLink("selectAllPlaces", "Select All"),
+                  actionLink("unselectAllPlaces", "Unselect All")
+          ),
+          column( 4,
+                  checkboxGroupInput("TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1))),
+                  actionLink("selectAllCrimeTypes", "Select All"),
+                  actionLink("unselectAllCrimeTypes", "Unselect All"),
+          ),
+          column( 4,
+                  checkboxInput("TODShadow", "Show overall distribution in background", value = FALSE),
+                  checkboxInput("TODDensity", "Show density curve", value = FALSE)
+          )
+        ),
       ),
-      column( 4,
-              checkboxInput("TODShadow", "Show overall distribution in background", value = FALSE),
-              checkboxInput("TODDensity", "Show density curve", value = FALSE)
-      )
-    ),
-  ),
-  
-  h2("How are the number of victims per crime distributed across different places"),
-  fluidRow(
-    column(12,
-           plotOutput("VictimsPlot"))
-  ),
-  checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE),
+      
+      tabPanel(
+        "Victims",
+        h2("How are the number of victims per crime distributed across different places"),
+        fluidRow(
+          column(12,
+                 plotOutput("VictimsPlot"))
+        ),
+        checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE)
+      ))
   
 )
 
