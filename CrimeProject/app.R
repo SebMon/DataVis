@@ -272,7 +272,7 @@ ui <- fluidPage(
         "Clock",
         h2("At what time of the day do crimes happen?"),
         
-        p("This diagram shows how crimes are distributed over the day. The filters can be used to select specific combinations of places and crime types. It is possible to overlay a density curve over the bars. It is also possible to see the overall distribution (all places and crime types) in blue, along with the distribution of crimes after applying your filters."),
+        p("This diagram shows how crimes are distributed over the day. The filters can be used to select specific combinations of places and crime types. It is possible to overlay a density curve over the bars. It is also possible to see the overall distribution (all places and crime types) in blue, along with the distribution of crimes after applying your filters. Please note that the height of all the bars will always sum to 1. If the overall distribution is shown in the background, its bars will also sum to 1 (independently of the primary bars)."),
         
         fluidRow(
           column( 8,
@@ -304,7 +304,7 @@ ui <- fluidPage(
       
       tabPanel(
         "Victims",
-        h2("How are the number of victims per crime distributed across different places"),
+        h2("How are the number of victims per crime distributed across different places?"),
         fluidRow(
           column(12,
                  plotOutput("VictimsPlot"))
@@ -399,7 +399,7 @@ server <- function(input, output, session) {
                  width=1)
     }
     plot <- plot +
-      scale_y_continuous(name="Density") +
+      scale_y_continuous(name="Frequency/Density") +
       scale_x_continuous(name="Hour",
                          breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24))
     if (input$TODDensity) {
@@ -436,7 +436,7 @@ server <- function(input, output, session) {
                  width=1)
     }
     plot <- plot +
-      scale_y_continuous(name="Density") +
+      scale_y_continuous(name="Frequency/Density") +
       scale_x_continuous(name="Hour",
                          breaks=c(0, 3, 6, 9, 12, 15, 18, 21, 24))
     if (input$TODDensity) {
@@ -487,12 +487,14 @@ server <- function(input, output, session) {
         return(ggplot(bin2d_vict_data) +
                  geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=100*..count../as.integer(sum_of_victims_in_places[y]))) +
                  stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = round(100*..count../as.integer(sum_of_victims_in_places[y]), digits = 3))) +
-                 scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.001, 100)))
+                 scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Percentage", limits=c(0.001, 100)) +
+                 xlab("Number of victims"))
       } else {
         return(ggplot(bin2d_vict_data) +
                  geom_bin_2d(mapping = aes(x=Victims, y=Place, fill=..count..)) +
                  stat_bin_2d(geom="text", mapping = aes(x=Victims, y=Place, label = ..count..)) +
-                 scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Crimes"))
+                 scale_fill_continuous(high = "#19547b", low = "#ffd89b", trans="log2", name="Number of crimes") +
+                 xlab("Number of victims"))
       }
     })
   
