@@ -240,14 +240,14 @@ ui <- fluidPage(
         column( 6,
                 plotOutput("stackedBarChartNorm")
         ),
-      )),
+      ),
       h3("And how has that changed over time?"),
       p("The line plot below shows the change of number of crimes for each place over time."),
       fluidRow(
         column( 12,
                 plotOutput("linePlotPlaces")
         )
-      ),
+      )),
       
       tabPanel(
         "Calendar",
@@ -462,14 +462,26 @@ server <- function(input, output, session) {
   
   output$TimeOfDayPlotCircular <- renderPlot(RoundTODPlot())
   
+  # Colors used are taken from here to ensure color blind people can differentiate between them: https://davidmathlogic.com/colorblind/#%23648FFF-%23785EF0-%23DC267F-%23FE6100-%23FFB000
+  
   output$stackedBarChart <- renderPlot(
     ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-      geom_bar(position="stack", stat="identity") + coord_flip()
+      geom_bar(position="stack", stat="identity") + coord_flip() +
+      scale_fill_manual(values=c("#648FFF",
+                                 "#FE6100",
+                                 "#785EF0",
+                                 "#DC267F",
+                                 "#FFB000"))
   ) 
   
   output$stackedBarChartNorm <- renderPlot(
     ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-      geom_bar(position="fill", stat="identity") + coord_flip()
+      geom_bar(position="fill", stat="identity") + coord_flip() +
+      scale_fill_manual(values=c("#648FFF",
+                                 "#FE6100",
+                                 "#785EF0",
+                                 "#DC267F",
+                                 "#FFB000"))
   )
   
   output$linePlotPlaces <- renderPlot(

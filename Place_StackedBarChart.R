@@ -39,10 +39,21 @@ unique(data_place$Place)
 data_place <- data_place %>% mutate(Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 
 ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-  geom_bar(position="stack", stat="identity") + coord_flip()
+  geom_bar(position="stack", stat="identity") + coord_flip() +
+  scale_fill_manual(values=c("#648FFF",
+                             "#FE6100",
+                             "#785EF0",
+                             "#DC267F",
+                             "#FFB000"))
+
 
 ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-  geom_bar(position="fill", stat="identity") + coord_flip()
+  geom_bar(position="fill", stat="identity") + coord_flip() +
+  scale_fill_manual(values=c("#648FFF",
+                             "#FE6100",
+                             "#785EF0",
+                             "#DC267F",
+                             "#FFB000"))
 
 table(data_place$Place)
 
