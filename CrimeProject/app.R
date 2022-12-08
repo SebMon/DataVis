@@ -231,6 +231,8 @@ ui <- fluidPage(
     tabPanel(
       "Places",
       h2("Which places have the highest amount of crimes?"),
+      p("The diagram to the left shows the amount of victims for each place. The type of crime is also displayed."),
+      p("The diagram to the right shows the data normalized. This can be used to see the most common type of crime for a specific place."),
       fluidRow(
         column( 6,
                 plotOutput("stackedBarChart")
@@ -238,13 +240,14 @@ ui <- fluidPage(
         column( 6,
                 plotOutput("stackedBarChartNorm")
         ),
-        column( 12,
-                h3("And how has that changed over time?")
-        ),
+      )),
+      h3("And how has that changed over time?"),
+      p("The line plot below shows the change of number of crimes for each place over time."),
+      fluidRow(
         column( 12,
                 plotOutput("linePlotPlaces")
         )
-      )),
+      ),
       
       tabPanel(
         "Calendar",
