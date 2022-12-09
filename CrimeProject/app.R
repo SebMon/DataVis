@@ -251,7 +251,9 @@ ui <- fluidPage(
       
       tabPanel(
         "Calendar",
-        h2("Crime rate over the years"),
+        h2("How has crime rates changed over the years?"),
+        h3("and are there any pattern in specific days?"),
+        p("The calendar heatmap shows the amount of crime each day, from 2017 to 2021."),
         fluidRow(
           column(12,
                  plotOutput("CalendarPlot",
