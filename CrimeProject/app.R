@@ -242,7 +242,7 @@ ui <- fluidPage(
                 plotOutput("stackedBarChartNorm")
         ),
       ),
-      h3("And how has that changed over time?"),
+      h3("Has the amount of crimes changed over time?"),
       p("The line plot below shows the change of number of crimes for each place over time."),
       fluidRow(
         column( 12,
