@@ -231,7 +231,7 @@ ui <- fluidPage(
   tabsetPanel(
     tabPanel(
       "Places",
-      h2("Which places have the highest amount of crimes?"),
+      h2("Which places have the highest amount of victims?"),
       p("The diagram to the left shows the amount of victims for each place. The type of crime is also displayed."),
       p("The diagram to the right shows the data normalized. This can be used to see the most common type of crime for a specific place."),
       fluidRow(
@@ -466,8 +466,8 @@ server <- function(input, output, session) {
   # Colors used are taken from here to ensure color blind people can differentiate between them: https://davidmathlogic.com/colorblind/#%23648FFF-%23785EF0-%23DC267F-%23FE6100-%23FFB000
   
   output$stackedBarChart <- renderPlot(
-    ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-      geom_bar(position="stack", stat="identity") + coord_flip() +
+    ggplot(data_place, aes(fill=Crime.Name1, y=Place, x=Victims)) + 
+      geom_bar(position="stack", stat="identity") +
       scale_fill_manual(values=c("#648FFF",
                                  "#FE6100",
                                  "#785EF0",
@@ -476,8 +476,8 @@ server <- function(input, output, session) {
   ) 
   
   output$stackedBarChartNorm <- renderPlot(
-    ggplot(data_place, aes(fill=Crime.Name1, y=Victims, x=Place)) + 
-      geom_bar(position="fill", stat="identity") + coord_flip() +
+    ggplot(data_place, aes(fill=Crime.Name1, y=Place, x=Victims)) + 
+      geom_bar(position="fill", stat="identity") +
       scale_fill_manual(values=c("#648FFF",
                                  "#FE6100",
                                  "#785EF0",
