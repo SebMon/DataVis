@@ -210,6 +210,7 @@ create_crimetype_gif <- function() {
     theme(axis.text.x = element_text(angle=90)) +
     xlab("Month") + ylab("% of crime") + 
     scale_x_date(date_labels = "%b%Y") +
+    scale_color_brewer(palette = "Paired") +
     transition_reveal(month)
   
   #anim_save("./www/crimebyTypeOverTime.gif", animate(the_gif, height = 300, width = 1400, renderer = gifski_renderer(loop = FALSE)))
