@@ -264,14 +264,12 @@ ui <- fluidPage(
       ),
       
       tabPanel(
-        "gif",
+        "Crime type over time",
         h2("What type of crime is most prevalent over time?"),
         #img(src="crimebyTypeOverTime.gif"),
         tags$video(id="video2", type="video/mp4", src="crimebyTypeOverTime.mp4", controls="controls"),
-        p('Over the first 3 years, from 2016 to 2019, the distribution remains relatively stable with some slight fluctuations. Crimes classified as Crime Against Property take up the vast majority, fluctuating between about 38% and 48%.'),
-        p('Between 2019 and 2020 there is a small decrease in Crimes Against Society with a small general increase in Crimes Against Property, but in early 2020 this trend witnesses a sudden spike. As Crimes Against Society sharply decreases, Crimes Against Property does the exact opposite in sharp increase. After this point, Crimes Against Society remains at around 15-18% where it used to be around 28%-32%, and Crimes Against Property stays around 48%-55%, with a temporary exception. This sudden change could be a sign that some very common crimes that were previously categorised as Crime Against Society would after 2020 be classified as Crime Against Property. Similarly, in mid 2021, crimes classified as Other experience a sudden and very temporary drop, only to go back to its usual average at around the 20%-24% mark. This decrease matches an increase in Crimes Against Property, and could again be a sign of categorisation changing, but this time temporarily.'),
-        p('While it is possible that these sudden changes could occur due to other events (Covid, protests, etc.), it seems unlikely that criminals suddenly, almost overnight, abandoned one type of crime to switch over to another type, without it affecting the rest of the categories.')
-      ),
+        p('This animated diagram illustrates how crimes are distributed into the categories shown in the legend. The Y-axis is the percentage of the total amount of crimes that each crime type takes up, at any given month in the date range shown in the X-axis (I.E. at each month, the percentages adds up to 100%).')
+        ),
       
       tabPanel(
         "Clock",
