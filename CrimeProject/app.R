@@ -314,6 +314,20 @@ ui <- fluidPage(
                  plotOutput("VictimsPlot"))
         ),
         checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE)
+      ),
+      tabPanel(
+        "Report",
+        h2("The groups report over crimes in Montgomery County"),
+        fluidRow(
+          column(12,
+                 p("Download the report"),
+                 downloadButton(
+                   "downloadReport",
+                   label = "Download",
+                   class = NULL,
+                   icon = shiny::icon("download")
+                 ))
+        ),
       ))
   
 )
@@ -518,6 +532,13 @@ server <- function(input, output, session) {
   output$VictimsPlot <- renderPlot(VictimsPlot())
   
   output$CalendarPlot <- renderPlot(calendar_plot)
+  
+  output$downloadReport <- downloadHandler(
+    filename = "Visualizing_Crimes_in_Montgomery_County.pdf",
+    content = function(file) {
+      file.copy("www/The_Report.pdf", file)
+    },
+  )
   
 }
 
