@@ -494,7 +494,8 @@ server <- function(input, output, session) {
       ggplot(aes(x=year, y=n, color=Place)) +
       ylab("Number of crimes") +
       xlab("Year") +
-      geom_line()
+      geom_line() +
+      geom_point()
   )
   
   VictimsPlot <- 
