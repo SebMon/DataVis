@@ -5,9 +5,9 @@ account: mikkl20
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7883698
-bundleId: 6631914
+bundleId: 6644263
 url: https://mikkl20.shinyapps.io/CrimeProject/
-when: 1670941740.12604
-lastSyncTime: 1670941740.12608
+when: 1671193338.877
+lastSyncTime: 1671193338.87704
 asMultiple: FALSE
 asStatic: FALSE

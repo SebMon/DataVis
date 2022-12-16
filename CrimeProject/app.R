@@ -8,7 +8,7 @@ library(dplyr)
 library(tidyverse)
 
 # Load data
-data <- read.csv('./data/Crime.csv')
+data <- read.csv('./data/temp.csv')
 data <- mutate(data, Crime.Name1 = ifelse(Crime.Name1 == "", "Other", Crime.Name1))
 data$Start_Date_Time_Date_Objects <- as.Date(data$Start_Date_Time, format="%m/%d/%Y %I:%M:%S %p")
 
@@ -18,7 +18,7 @@ population = fastmap()
 #calendar_data <- read.csv('../data/sample.csv')
 #calendar_date <- as.Date(data$Start_Date_Time , "%m/%d/%Y")
 calendar_date <- data$Start_Date_Time_Date_Objects
-calendar_date
+
 calendar_minDate <- "2017-01-01"
 calendar_maxDate <- "2021-12-31"
 calendar_date <- subset(calendar_date, calendar_date >= calendar_minDate & calendar_date <= calendar_maxDate)
@@ -248,87 +248,84 @@ ui <- fluidPage(
         column( 12,
                 plotOutput("linePlotPlaces")
         )
-      )),
+      ),
+      h2("How are the number of victims per crime distributed across different places?"),
+      fluidRow(
+        column(12,
+               plotOutput("VictimsPlot"))
+      ),
+      checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE),
+    ),
+    
+    tabPanel(
+      "Calendar Heatmap",
+      h2("How has crime rates changed over the years?"),
+      h3("and are there any pattern in specific days?"),
+      p("The calendar heatmap shows the amount of crime each day, from 2017 to 2021."),
+      fluidRow(
+        column(12,
+               plotOutput("CalendarPlot",
+                          width = "100%",
+                          height = 800)
+        ),
+      )
+    ),
+    
+    tabPanel(
+      "Types of crime",
+      h2("What type of crime is most prevalent over time?"),
+      #img(src="crimebyTypeOverTime.gif"),
+      tags$video(id="video2", type="video/mp4", src="crimebyTypeOverTime.mp4", controls="controls"),
+      p('This animated diagram illustrates how crimes are distributed into the categories shown in the legend. The Y-axis is the percentage of the total amount of crimes that each crime type takes up, at any given month in the date range shown in the X-axis (I.E. at each month, the percentages adds up to 100%).')
+    ),
+    
+    tabPanel(
+      "Time of day",
+      h2("At what time of the day do crimes happen?"),
       
-      tabPanel(
-        "Calendar",
-        h2("How has crime rates changed over the years?"),
-        h3("and are there any pattern in specific days?"),
-        p("The calendar heatmap shows the amount of crime each day, from 2017 to 2021."),
-        fluidRow(
-          column(12,
-                 plotOutput("CalendarPlot",
-                            width = "100%",
-                            height = 800)
-          ),
+      p("This diagram shows how crimes are distributed over the day. The filters can be used to select specific combinations of places and crime types. It is possible to overlay a density curve over the bars. It is also possible to see the overall distribution (all places and crime types) in blue, along with the distribution of crimes after applying your filters. Please note that the height of all the bars will always sum to 1. If the overall distribution is shown in the background, its bars will also sum to 1 (independently of the primary bars)."),
+      
+      fluidRow(
+        column( 8,
+                plotOutput("TimeOfDayPlot"),
+        ),
+        
+        column( 4,
+                plotOutput("TimeOfDayPlotCircular"),
         )
       ),
-      
-      tabPanel(
-        "Crime type over time",
-        h2("What type of crime is most prevalent over time?"),
-        #img(src="crimebyTypeOverTime.gif"),
-        tags$video(id="video2", type="video/mp4", src="crimebyTypeOverTime.mp4", controls="controls"),
-        p('This animated diagram illustrates how crimes are distributed into the categories shown in the legend. The Y-axis is the percentage of the total amount of crimes that each crime type takes up, at any given month in the date range shown in the X-axis (I.E. at each month, the percentages adds up to 100%).')
+      fluidRow(
+        column( 4,
+                checkboxGroupInput("TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place))),
+                
+                actionLink("selectAllPlaces", "Select All"),
+                actionLink("unselectAllPlaces", "Unselect All")
         ),
-      
-      tabPanel(
-        "Clock",
-        h2("At what time of the day do crimes happen?"),
-        
-        p("This diagram shows how crimes are distributed over the day. The filters can be used to select specific combinations of places and crime types. It is possible to overlay a density curve over the bars. It is also possible to see the overall distribution (all places and crime types) in blue, along with the distribution of crimes after applying your filters. Please note that the height of all the bars will always sum to 1. If the overall distribution is shown in the background, its bars will also sum to 1 (independently of the primary bars)."),
-        
-        fluidRow(
-          column( 8,
-                  plotOutput("TimeOfDayPlot"),
-          ),
-          
-          column( 4,
-                  plotOutput("TimeOfDayPlotCircular"),
-          )
+        column( 4,
+                checkboxGroupInput("TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1))),
+                actionLink("selectAllCrimeTypes", "Select All"),
+                actionLink("unselectAllCrimeTypes", "Unselect All"),
         ),
-        fluidRow(
-          column( 4,
-                  checkboxGroupInput("TODPlaces", "Places", sort(unique(data_place$Place)), selected=sort(unique(data_place$Place))),
-                  
-                  actionLink("selectAllPlaces", "Select All"),
-                  actionLink("unselectAllPlaces", "Unselect All")
-          ),
-          column( 4,
-                  checkboxGroupInput("TODCrimeTypes", "Crime Types", sort(unique(data_place$Crime.Name1)), selected=sort(unique(data_place$Crime.Name1))),
-                  actionLink("selectAllCrimeTypes", "Select All"),
-                  actionLink("unselectAllCrimeTypes", "Unselect All"),
-          ),
-          column( 4,
-                  checkboxInput("TODShadow", "Show overall distribution in background", value = FALSE),
-                  checkboxInput("TODDensity", "Show density curve", value = FALSE)
-          )
-        ),
+        column( 4,
+                checkboxInput("TODShadow", "Show overall distribution in background", value = FALSE),
+                checkboxInput("TODDensity", "Show density curve", value = FALSE)
+        )
       ),
-      
-      tabPanel(
-        "Victims",
-        h2("How are the number of victims per crime distributed across different places?"),
-        fluidRow(
-          column(12,
-                 plotOutput("VictimsPlot"))
-        ),
-        checkboxInput("VictimPlotNormalize", "Show as percentage of all crimes in that place", value = FALSE)
+    ),
+    tabPanel(
+      "Report",
+      h2("The groups report over crimes in Montgomery County"),
+      fluidRow(
+        column(12,
+               p("Download the report"),
+               downloadButton(
+                 "downloadReport",
+                 label = "Download",
+                 class = NULL,
+                 icon = shiny::icon("download")
+               ))
       ),
-      tabPanel(
-        "Report",
-        h2("The groups report over crimes in Montgomery County"),
-        fluidRow(
-          column(12,
-                 p("Download the report"),
-                 downloadButton(
-                   "downloadReport",
-                   label = "Download",
-                   class = NULL,
-                   icon = shiny::icon("download")
-                 ))
-        ),
-      ))
+    ))
   
 )
 
@@ -482,7 +479,7 @@ server <- function(input, output, session) {
   output$stackedBarChart <- renderPlot(
     ggplot(data_place, aes(fill=Crime.Name1, y=Place, x=Victims)) + 
       geom_bar(position="stack", stat="identity") +
-      scale_fill_manual(values=c("#648FFF",
+      scale_fill_manual(name = "Crime type", values=c("#648FFF",
                                  "#FE6100",
                                  "#785EF0",
                                  "#DC267F",
@@ -492,7 +489,7 @@ server <- function(input, output, session) {
   output$stackedBarChartNorm <- renderPlot(
     ggplot(data_place, aes(fill=Crime.Name1, y=Place, x=Victims)) + 
       geom_bar(position="fill", stat="identity") +
-      scale_fill_manual(values=c("#648FFF",
+      scale_fill_manual(name = "Crime type", values=c("#648FFF",
                                  "#FE6100",
                                  "#785EF0",
                                  "#DC267F",
